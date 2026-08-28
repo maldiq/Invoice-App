@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Isi Sitemap setelah domain production tersedia, contoh:
+# Sitemap: https://invoice.solusiweb.net/sitemap.xml

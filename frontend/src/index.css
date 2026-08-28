@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply overflow-x-hidden;
+    font-family: 'Figtree', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: 'Sora', system-ui, sans-serif;
+  }
+
+  .btn {
+    @apply px-3 py-2 sm:px-4 rounded-lg text-sm sm:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap;
+  }
+  .btn-primary {
+    @apply btn bg-blue-600 text-white hover:bg-blue-700;
+  }
+  .btn-secondary {
+    @apply btn bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700;
+  }
+  .input {
+    @apply w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+  .table-wrap {
+    @apply overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
+  }
+
+  .landing {
+    @apply bg-white text-slate-800;
+  }
+
+  .landing-wrap {
+    @apply max-w-6xl mx-auto px-4 sm:px-6;
+  }
+
+  .landing-nav {
+    @apply sticky top-0 z-30 bg-[#0f2f2c]/90 backdrop-blur-md border-b border-white/10;
+  }
+
+  .landing-hero {
+    @apply relative bg-[#0f2f2c] overflow-hidden;
+  }
+
+  .landing-hero__bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 20%, rgba(45, 160, 140, 0.35), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 10% 80%, rgba(212, 160, 60, 0.18), transparent 50%),
+      linear-gradient(165deg, #0f2f2c 0%, #164943 45%, #0c2422 100%);
+  }
+
+  .landing-hero__bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, black 40%, transparent 95%);
+  }
+
+  .landing-section {
+    @apply py-16 sm:py-20;
+  }
+
+  .landing-btn-solid {
+    @apply bg-amber-400 text-slate-900 hover:bg-amber-300 shadow-sm;
+  }
+
+  .landing-btn-ghost {
+    @apply bg-white/10 text-white hover:bg-white/15 border border-white/20;
+  }
+
+  .landing-btn-lg {
+    @apply px-6 py-3;
+  }
+
+  .landing-mock {
+    @apply relative mx-auto max-w-md;
+    animation: landing-float 6s ease-in-out infinite;
+  }
+
+  .landing-mock__sheet {
+    @apply bg-white rounded-sm shadow-2xl p-6 sm:p-8 relative z-10;
+    transform: rotate(-1.5deg);
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .landing-mock::before {
+    content: '';
+    position: absolute;
+    inset: 12% -6% -8% 8%;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    transform: rotate(3deg);
+  }
+
+  .landing-solution-panel {
+    @apply rounded-2xl p-6 sm:p-8;
+    background: linear-gradient(145deg, #164943 0%, #0f2f2c 60%, #0c2422 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .landing-cta {
+    background:
+      radial-gradient(ellipse 70% 50% at 80% 0%, rgba(45, 160, 140, 0.3), transparent 55%),
+      linear-gradient(160deg, #0f2f2c, #0a1f1d);
+  }
+
+  .landing-fade-up {
+    animation: landing-fade-up 0.8s ease-out both;
+  }
+
+  .landing-fade-up--delay {
+    animation-delay: 0.15s;
+  }
+
+  .landing-fade-in {
+    animation: landing-fade-in 0.6s ease-out both;
+  }
+}
+
+@keyframes landing-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-fade-up,
+  .landing-fade-in,
+  .landing-mock {
+    animation: none !important;
+  }
+}
