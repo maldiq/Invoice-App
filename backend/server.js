@@ -5,6 +5,7 @@ const cors = require('cors');
 const invoiceRoutes = require('./routes/invoiceRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const authRoutes = require('./routes/authRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 require('./database');
 
 const app = express();
@@ -12,8 +13,10 @@ const PORT = process.env.PORT || 3001;
 const corsOrigin = process.env.CORS_ORIGIN;
 
 app.use(cors(corsOrigin ? { origin: corsOrigin } : undefined));
-app.use(express.json());
+app.use(express.json({ limit: '12mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
+app.use('/api/settings', settingsRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/clients', clientRoutes);
 

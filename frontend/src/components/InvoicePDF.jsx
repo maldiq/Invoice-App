@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer';
 import { company } from '../config/company';
 
 const styles = StyleSheet.create({
@@ -26,6 +26,12 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontStyle: 'italic',
     marginTop: 2,
+  },
+  logo: {
+    width: 72,
+    height: 40,
+    objectFit: 'contain',
+    marginBottom: 6,
   },
   invoiceTitle: {
     fontSize: 28,
@@ -134,14 +140,19 @@ function formatDate(dateStr) {
   });
 }
 
-export default function InvoicePDF({ invoice }) {
+export default function InvoicePDF({ invoice, logoUrl }) {
+  const logo = logoUrl || company.logo || '';
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <View>
-            <Text style={styles.companyName}>{company.name}</Text>
-            <Text style={styles.tagline}>{company.tagline}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            {logo ? <Image src={logo} style={styles.logo} /> : null}
+            <View>
+              <Text style={styles.companyName}>{company.name}</Text>
+              <Text style={styles.tagline}>{company.tagline}</Text>
+            </View>
           </View>
           <Text style={styles.invoiceTitle}>INVOICE</Text>
         </View>

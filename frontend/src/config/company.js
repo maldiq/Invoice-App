@@ -9,6 +9,8 @@ export const company = {
   },
   footerMessage: 'THANK YOU FOR YOUR BUSINESS!',
   dueDays: 7,
+  /** Logo default (file di frontend/public). Kosongkan jika pakai upload per user. */
+  logo: '',
 
   /**
    * true  = tampilkan landing page sebelum login

@@ -48,6 +48,13 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS user_settings (
+    user_id INTEGER PRIMARY KEY,
+    logo_path TEXT,
+    updated_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
 `);
 
 function ensureColumn(table, column, definition) {

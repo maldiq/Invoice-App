@@ -1,4 +1,5 @@
 const db = require('../database');
+const { sendMail, isSmtpConfigured } = require('../utils/mailer');
 
 function formatDateTime(date = new Date()) {
   const pad = (n) => String(n).padStart(2, '0');
@@ -184,4 +185,81 @@ exports.getReportByStatus = (req, res) => {
   };
 
   res.json({ summary, grandTotal, invoices });
+};
+
+exports.getDashboard = (req, res) => {
+  const invoices = db
+    .prepare('SELECT * FROM invoices WHERE user_id = ? ORDER BY created_at DESC')
+    .all(req.user.id)
+    .map(attachTotals);
+
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  const byStatus = (status) => invoices.filter((i) => i.status === status);
+  const sum = (list) => list.reduce((s, i) => s + (i.total || 0), 0);
+
+  const paid = byStatus('paid');
+  const paidThisMonth = paid.filter((i) => (i.date || '').startsWith(ym));
+  const outstanding = invoices.filter((i) => i.status === 'sent' || i.status === 'overdue');
+
+  res.json({
+    counts: {
+      all: invoices.length,
+      draft: byStatus('draft').length,
+      sent: byStatus('sent').length,
+      paid: paid.length,
+      overdue: byStatus('overdue').length,
+    },
+    totals: {
+      outstanding: sum(outstanding),
+      overdue: sum(byStatus('overdue')),
+      paidThisMonth: sum(paidThisMonth),
+      paidAll: sum(paid),
+    },
+    recent: invoices.slice(0, 5),
+    smtpConfigured: isSmtpConfigured(),
+  });
+};
+
+exports.sendEmail = async (req, res) => {
+  try {
+    const invoice = findOwnedInvoice(req.params.id, req.user.id);
+    if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+
+    const to = (req.body.to || invoice.client_email || '').trim();
+    if (!to) return res.status(400).json({ error: 'Email penerima wajib diisi' });
+
+    const subject = req.body.subject || `Invoice ${invoice.invoice_number}`;
+    const message = req.body.message
+      || `Halo ${invoice.client_name},\n\nTerlampir invoice ${invoice.invoice_number}. Terima kasih.\n`;
+
+    const attachments = [];
+    if (req.body.pdfBase64) {
+      const raw = String(req.body.pdfBase64).replace(/^data:application\/pdf;base64,/, '');
+      attachments.push({
+        filename: `${invoice.invoice_number}.pdf`,
+        content: Buffer.from(raw, 'base64'),
+        contentType: 'application/pdf',
+      });
+    }
+
+    await sendMail({
+      to,
+      subject,
+      text: message,
+      html: `<p>${message.replace(/\n/g, '<br/>')}</p>`,
+      attachments,
+    });
+
+    if (invoice.status === 'draft') {
+      db.prepare('UPDATE invoices SET status = ? WHERE id = ? AND user_id = ?')
+        .run('sent', invoice.id, req.user.id);
+    }
+
+    const updated = attachTotals(findOwnedInvoice(req.params.id, req.user.id));
+    res.json({ message: 'Invoice terkirim', invoice: updated });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message || 'Gagal mengirim email' });
+  }
 };

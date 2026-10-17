@@ -8,11 +8,14 @@ import StatusReport from './components/StatusReport';
 import LoginPage from './components/LoginPage';
 import LandingPage from './components/LandingPage';
 import ChangePasswordForm from './components/ChangePasswordForm';
+import SettingsPage from './components/SettingsPage';
+import SendInvoiceEmail from './components/SendInvoiceEmail';
 import {
   getInvoices,
   getInvoice,
   getNextNumber,
   getReportByStatus,
+  getDashboard,
   createInvoice,
   updateInvoice,
   deleteInvoice,
@@ -30,6 +33,7 @@ import {
   clearAuth,
   getMe,
 } from './api/authApi';
+import { getSettings } from './api/settingsApi';
 import { company } from './config/company';
 
 function formatCurrency(amount) {
@@ -76,10 +80,14 @@ export default function App() {
   const [nextNumber, setNextNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [returnView, setReturnView] = useState('list');
   const [reportData, setReportData] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const [reportFilter, setReportFilter] = useState('all');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [settings, setSettings] = useState(null);
+  const [emailInvoice, setEmailInvoice] = useState(null);
   const [authScreen, setAuthScreen] = useState(
     company.landingEnabled ? 'landing' : 'login'
   );
@@ -112,6 +120,24 @@ export default function App() {
     }
   };
 
+  const loadSettings = async () => {
+    try {
+      const data = await getSettings();
+      setSettings(data);
+    } catch (err) {
+      handleAuthError(err);
+    }
+  };
+
+  const loadDashboard = async () => {
+    try {
+      const data = await getDashboard();
+      setDashboardData(data);
+    } catch (err) {
+      handleAuthError(err);
+    }
+  };
+
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -135,12 +161,24 @@ export default function App() {
     if (!user) return;
     loadInvoices();
     loadClients();
+    loadSettings();
+    loadDashboard();
   }, [user]);
+
+  useEffect(() => {
+    if (!error && !success) return;
+    const timeout = setTimeout(() => {
+      setError('');
+      setSuccess('');
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [error, success]);
 
   const handleLoginSuccess = ({ token, user: loggedUser }) => {
     setAuth(token, loggedUser);
     setUser(loggedUser);
     setError('');
+    setSuccess('');
     setView('list');
   };
 
@@ -154,6 +192,7 @@ export default function App() {
     setReportData(null);
     setView('list');
     setError('');
+    setSuccess('');
     setAuthScreen(company.landingEnabled ? 'landing' : 'login');
   };
 
@@ -307,6 +346,20 @@ export default function App() {
     }
   };
 
+  const handleSettingsUpdated = (nextSettings) => {
+    setSettings(nextSettings || settings);
+  };
+
+  const handleInvoiceSent = async (updatedInvoice) => {
+    setEmailInvoice(null);
+    setSuccess('Invoice berhasil dikirim melalui email.');
+    if (updatedInvoice) {
+      setSelected((current) => (current && current.id === updatedInvoice.id ? { ...current, ...updatedInvoice } : current));
+    }
+    await loadInvoices();
+    await loadDashboard();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
@@ -325,6 +378,7 @@ export default function App() {
               <div className="flex gap-2 flex-wrap justify-end">
                 {view === 'list' && (
                   <>
+                    <button onClick={() => setView('settings')} className="btn-secondary">Logo</button>
                     <button onClick={() => setView('password')} className="btn-secondary">Password</button>
                     <button onClick={openReport} className="btn-secondary">Laporan</button>
                     <button onClick={() => openClients('list')} className="btn-secondary">Klien</button>
@@ -359,6 +413,7 @@ export default function App() {
               <p className="text-sm text-gray-500 px-1">{user.name}</p>
               {view === 'list' ? (
                 <>
+                  <button onClick={() => navigate('settings')} className="btn-secondary w-full text-left">Logo</button>
                   <button onClick={() => navigate('password')} className="btn-secondary w-full text-left">Password</button>
                   <button onClick={() => navigate(null, openReport)} className="btn-secondary w-full text-left">Laporan</button>
                   <button onClick={() => navigate(null, () => openClients('list'))} className="btn-secondary w-full text-left">Klien</button>
@@ -382,15 +437,51 @@ export default function App() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-5 sm:py-8">
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm sm:text-base">
-            <span className="break-words">{error}</span>
-            <button onClick={() => setError('')} className="ml-2 underline">Dismiss</button>
+        {(error || success) && (
+          <div className="fixed top-4 right-4 z-50 w-[min(92vw,22rem)]">
+            <div
+              className={[
+                'border rounded-xl shadow-lg p-3 text-sm flex items-start justify-between gap-3',
+                success
+                  ? 'bg-green-50 border-green-200 text-green-800'
+                  : 'bg-red-50 border-red-200 text-red-800',
+              ].join(' ')}
+            >
+              <span className="break-words leading-5">{success || error}</span>
+              <button type="button" onClick={() => { setSuccess(''); setError(''); }} className="font-semibold opacity-80 hover:opacity-100 ml-2">
+                ×
+              </button>
+            </div>
           </div>
         )}
 
         {view === 'list' && (
           <div>
+            <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  {settings?.logo_url ? (
+                    <img
+                      src={settings.logo_url}
+                      alt="Logo perusahaan"
+                      className="h-12 w-12 object-contain rounded-lg border border-gray-200 bg-gray-50 p-1"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-sm font-bold text-blue-700 border border-blue-100">
+                      {company.appName.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-lg font-semibold text-gray-900 truncate">{company.appName}</p>
+                    <p className="text-sm text-gray-500 break-all">{user.email}</p>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setView('settings')} className="btn-secondary w-full sm:w-auto">
+                  Kelola logo
+                </button>
+              </div>
+            </div>
+
             {invoices.length === 0 ? (
               <div className="text-center py-16 sm:py-20 px-2">
                 <p className="text-gray-500 mb-4">Belum ada invoice.</p>
@@ -500,15 +591,22 @@ export default function App() {
           <div>
             <div className="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3 mb-4">
               <button onClick={() => openEdit(selected.id)} className="btn-secondary w-full sm:w-auto">Edit</button>
+              <button
+                type="button"
+                onClick={() => setEmailInvoice(selected)}
+                className="btn-secondary w-full sm:w-auto"
+              >
+                Kirim Email
+              </button>
               <PDFDownloadLink
-                document={<InvoicePDF invoice={selected} />}
+                document={<InvoicePDF invoice={selected} logoUrl={settings?.logo_url || company.logo || ''} />}
                 fileName={pdfFileName(selected)}
                 className="btn-primary inline-block text-center w-full sm:w-auto"
               >
                 {({ loading: pdfLoading }) => (pdfLoading ? 'Generating PDF...' : 'Download PDF')}
               </PDFDownloadLink>
             </div>
-            <InvoicePreview invoice={selected} />
+            <InvoicePreview invoice={selected} logoUrl={settings?.logo_url || company.logo || ''} />
           </div>
         )}
 
@@ -599,6 +697,22 @@ export default function App() {
           </div>
         )}
 
+        {view === 'settings' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 max-w-xl">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold">Logo & Branding</h2>
+                <p className="text-sm text-gray-500">Email akun: {user.email}</p>
+              </div>
+            </div>
+            <SettingsPage
+              settings={settings}
+              onUpdated={handleSettingsUpdated}
+              onCancel={() => setView('list')}
+            />
+          </div>
+        )}
+
         {view === 'password' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 max-w-lg">
             <h2 className="text-lg font-semibold mb-2">Update Password</h2>
@@ -607,6 +721,16 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {emailInvoice && (
+        <SendInvoiceEmail
+          invoice={emailInvoice}
+          logoUrl={settings?.logo_url || company.logo || ''}
+          smtpConfigured={Boolean(dashboardData?.smtpConfigured)}
+          onSent={handleInvoiceSent}
+          onClose={() => setEmailInvoice(null)}
+        />
+      )}
     </div>
   );
 }

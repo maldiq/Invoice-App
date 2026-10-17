@@ -24,15 +24,26 @@ const statusStyles = {
   overdue: 'bg-red-100 text-red-700',
 };
 
-export default function InvoicePreview({ invoice }) {
+export default function InvoicePreview({ invoice, logoUrl }) {
   if (!invoice) return null;
+
+  const logo = logoUrl || company.logo || '';
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-8 overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6 pb-6 border-b border-gray-200">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{company.name}</h2>
-          <p className="text-gray-500 italic mt-0.5 text-sm sm:text-base">{company.tagline}</p>
+        <div className="flex items-start gap-3">
+          {logo ? (
+            <img src={logo} alt="Logo perusahaan" className="h-14 w-14 object-contain rounded-lg border border-gray-200 bg-gray-50 p-2" />
+          ) : (
+            <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-gray-100 text-lg font-bold text-gray-700 border border-gray-200">
+              {company.name?.slice(0, 1)?.toUpperCase() || 'I'}
+            </div>
+          )}
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{company.name}</h2>
+            <p className="text-gray-500 italic mt-0.5 text-sm sm:text-base">{company.tagline}</p>
+          </div>
         </div>
         <div className="sm:text-right">
           <h1 className="text-2xl sm:text-4xl font-light text-gray-400 tracking-wide">INVOICE</h1>
