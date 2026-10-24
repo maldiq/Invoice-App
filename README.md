@@ -74,9 +74,9 @@ npm run dev
 
 Aplikasi berjalan di `http://localhost:5173`. Request API di-proxy ke backend via Vite config.
 
-## Deploy (cPanel & VPS)
+## Deploy (cPanel, VPS, aaPanel)
 
-Panduan lengkap upload ke **cPanel Node.js App** dan **VPS (Nginx + PM2)** ada di [DEPLOY.md](DEPLOY.md).
+Panduan lengkap upload ke **cPanel Node.js App**, **VPS (Nginx + PM2)**, dan **VPS aaPanel** ada di [DEPLOY.md](DEPLOY.md).
 
 Ringkasnya:
 
